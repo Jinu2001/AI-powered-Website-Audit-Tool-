@@ -6,83 +6,62 @@ export default function RecommendationsPanel({ recommendations }) {
   // Sort recommendations by priority (ascending, so Priority 1 is first)
   const sortedRecs = [...recommendations].sort((a, b) => a.priority - b.priority);
 
-  const getPriorityColor = (priority) => {
-    if (priority === 1) return 'var(--color-critical)';
-    if (priority === 2) return 'var(--color-high)';
-    if (priority === 3) return 'var(--color-medium)';
-    return 'var(--color-low)';
+  const getPriorityColorClasses = (priority) => {
+    if (priority === 1) return { border: 'border-error', badge: 'bg-error-container text-on-error-container' };
+    if (priority === 2) return { border: 'border-amber-500', badge: 'bg-amber-100 text-amber-800' };
+    return { border: 'border-primary', badge: 'bg-primary-fixed text-on-primary-fixed' };
+  };
+
+  // Mock effort tags just for design richness if the AI model doesn't output it
+  const getEffortTag = (priority) => {
+    if (priority === 1) return { text: 'Low Effort', classes: 'bg-green-100 text-green-800' };
+    if (priority === 2) return { text: 'Medium Effort', classes: 'bg-amber-100 text-amber-800' };
+    return { text: 'High Effort', classes: 'bg-red-100 text-red-800' };
   };
 
   return (
-    <div style={{ marginBottom: '2.5rem' }}>
-      <h3 className="panel-title">
-        <span style={{ color: 'var(--color-primary)' }}>🚀</span> Prioritized Action Items
-      </h3>
+    <section className="flex flex-col gap-md">
+      <div className="flex items-center gap-xs">
+        <span className="material-symbols-outlined text-tertiary">rule</span>
+        <h2 className="font-headline-sm-mobile text-headline-sm-mobile font-bold">Prioritized Recommendations</h2>
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="space-y-sm">
         {sortedRecs.map((rec, index) => {
-          const badgeColor = getPriorityColor(rec.priority);
+          const { border } = getPriorityColorClasses(rec.priority);
+          const effort = getEffortTag(rec.priority);
+          
+          let priorityBadgeClass = 'bg-primary text-on-primary';
+          if (rec.priority === 1) priorityBadgeClass = 'bg-error text-on-error';
+          else if (rec.priority === 2) priorityBadgeClass = 'bg-amber-500 text-on-primary'; // Adjust as needed
+          
           return (
-            <div key={index} className="glass-card" style={{
-              display: 'flex',
-              gap: '1.5rem',
-              padding: '1.5rem',
-              alignItems: 'flex-start'
-            }}>
-              {/* Priority badge */}
-              <div style={{
-                background: `rgba(${badgeColor === 'var(--color-critical)' ? '239, 68, 68' : badgeColor === 'var(--color-high)' ? '249, 115, 22' : '234, 179, 8'}, 0.1)`,
-                border: `1px solid ${badgeColor}`,
-                color: badgeColor,
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 800,
-                fontSize: '0.85rem',
-                padding: '0.35rem 0.75rem',
-                borderRadius: 'var(--radius-sm)',
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap'
-              }}>
+            <div 
+              key={index} 
+              className={`bg-surface-container-low border-l-4 ${border} p-md rounded-r-xl relative overflow-hidden subtle-shadow group hover:-translate-y-1 transition-transform duration-300 text-left`}
+            >
+              <div className={`absolute top-0 right-0 ${priorityBadgeClass} px-sm py-xs rounded-bl-lg font-label-md text-caption font-bold`}>
                 Priority {rec.priority}
               </div>
-
-              {/* Recommendation details */}
-              <div style={{ flex: 1 }}>
-                <h4 style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: '1.15rem',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  marginBottom: '0.5rem'
-                }}>
-                  {rec.action}
-                </h4>
-                <p style={{
-                  color: 'var(--text-secondary)',
-                  fontSize: '0.9rem',
-                  marginBottom: '0.75rem'
-                }}>
-                  {rec.reason}
-                </p>
+              <h3 className="font-bold text-lg text-on-surface mb-xs pr-xl">{rec.action}</h3>
+              <p className="text-on-surface-variant font-body-md leading-relaxed mb-sm">
+                {rec.reason}
+              </p>
+              
+              <div className="flex items-center gap-sm flex-wrap">
                 {rec.metric && (
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border-color)',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    fontFamily: 'monospace',
-                    color: 'var(--text-muted)'
-                  }}>
-                    Source Metric: {rec.metric}
-                  </div>
+                  <span className="bg-surface-container-lowest text-outline px-sm py-xs rounded text-caption font-mono">
+                    Source: {rec.metric}
+                  </span>
                 )}
+                <span className={`${effort.classes} px-sm py-xs rounded text-caption font-semibold`}>
+                  {effort.text}
+                </span>
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

@@ -7,74 +7,59 @@ export default function PromptLogViewer({ promptLogs }) {
 
   const renderCodeContent = (content) => {
     return (
-      <pre style={{
-        background: 'rgba(0, 0, 0, 0.4)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-sm)',
-        padding: '1.25rem',
-        overflowX: 'auto',
-        fontSize: '0.85rem',
-        fontFamily: 'monospace',
-        color: '#a9b1d6',
-        lineHeight: '1.5',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-all',
-        maxHeight: '500px',
-        overflowY: 'auto'
-      }}>
+      <pre className="bg-[#121014] border border-outline/30 rounded-lg p-sm overflow-x-auto text-caption font-mono text-[#dbb8ff] leading-relaxed max-h-[350px] overflow-y-auto">
         <code>{content}</code>
       </pre>
     );
   };
 
   return (
-    <div style={{ marginBottom: '2.5rem' }}>
-      <h3 className="panel-title">
-        <span style={{ color: 'var(--color-primary)' }}>🛠️</span> AI Prompt & Output Logs
-      </h3>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-        Debugging logs containing the exact inputs and outputs passed through the Gemini API integration.
-      </p>
+    <div className="bg-inverse-surface text-white rounded-xl overflow-hidden mt-xl subtle-shadow">
+      <details className="group">
+        <summary className="flex justify-between items-center p-md cursor-pointer select-none">
+          <div className="flex items-center gap-sm">
+            <span className="material-symbols-outlined text-primary-fixed" style={{ fontSize: '20px' }}>terminal</span>
+            <span className="font-label-md text-label-md text-inverse-on-surface font-semibold">
+              VIEW PROMPT LOGS (DEVELOPER CONSOLE)
+            </span>
+          </div>
+          <span className="material-symbols-outlined text-inverse-on-surface transition-transform duration-200 group-open:rotate-180" style={{ fontSize: '20px' }}>
+            expand_more
+          </span>
+        </summary>
+        
+        <div className="px-md pb-md pt-xs border-t border-outline-variant/10">
+          {/* Sub-tabs inside prompt viewer */}
+          <div className="flex gap-sm border-b border-outline-variant/20 pb-sm mb-md overflow-x-auto">
+            {[
+              { id: 'system', label: 'System Instructions' },
+              { id: 'user', label: 'User Data Payload' },
+              { id: 'raw', label: 'Raw Gemini Response' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSubTab(tab.id);
+                }}
+                className={`px-sm py-xs text-caption font-semibold rounded transition-all cursor-pointer ${
+                  activeSubTab === tab.id 
+                    ? 'bg-primary-container text-white shadow' 
+                    : 'text-inverse-on-surface/60 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '0.5rem',
-        marginBottom: '1rem',
-        borderBottom: '1px solid var(--border-color)',
-        paddingBottom: '0.5rem'
-      }}>
-        {[
-          { id: 'system', label: 'System Instruction' },
-          { id: 'user', label: 'User Prompt (Data)' },
-          { id: 'raw', label: 'Raw AI Output' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveSubTab(tab.id)}
-            style={{
-              background: activeSubTab === tab.id ? 'rgba(255,255,255,0.08)' : 'transparent',
-              border: 'none',
-              borderRadius: 'var(--radius-sm)',
-              padding: '0.5rem 1rem',
-              color: activeSubTab === tab.id ? 'var(--color-secondary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontWeight: activeSubTab === tab.id ? 600 : 400,
-              fontSize: '0.85rem',
-              transition: 'var(--transition-smooth)'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
-      <div>
-        {activeSubTab === 'system' && renderCodeContent(promptLogs.system_prompt)}
-        {activeSubTab === 'user' && renderCodeContent(promptLogs.user_prompt)}
-        {activeSubTab === 'raw' && renderCodeContent(promptLogs.raw_output)}
-      </div>
+          <div>
+            {activeSubTab === 'system' && renderCodeContent(promptLogs.system_prompt)}
+            {activeSubTab === 'user' && renderCodeContent(promptLogs.user_prompt)}
+            {activeSubTab === 'raw' && renderCodeContent(promptLogs.raw_output)}
+          </div>
+        </div>
+      </details>
     </div>
   );
 }

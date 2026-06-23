@@ -10,60 +10,36 @@ export default function UrlInput({ onSubmit, loading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1rem',
-      maxWidth: '640px',
-      margin: '0 auto 3rem auto',
-      animation: 'fadeInUp 0.8s ease-out'
-    }}>
-      <div style={{
-        display: 'flex',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-md)',
-        padding: '0.5rem',
-        alignItems: 'center',
-        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)',
-        transition: 'var(--transition-smooth)',
-      }} className="input-wrapper">
-        <input
-          type="text"
-          placeholder="Enter website URL to audit (e.g. eight25media.com)..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          disabled={loading}
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            color: 'var(--text-primary)',
-            fontFamily: 'var(--font-body)',
-            fontSize: '1rem',
-            padding: '0.75rem 1rem',
-          }}
-        />
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="input-focus-ring group flex flex-col md:flex-row items-center gap-base p-xs bg-white border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex items-center w-full px-md py-sm">
+          <span className="material-symbols-outlined text-outline mr-sm">language</span>
+          <input
+            type="url"
+            className="w-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline-variant font-body-md text-body-md"
+            placeholder="https://yoursite.com"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            disabled={loading}
+            required
+          />
+        </div>
         <button
           type="submit"
           disabled={loading || !url.trim()}
-          style={{
-            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 'var(--radius-sm)',
-            padding: '0.75rem 1.5rem',
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 600,
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-            opacity: loading || !url.trim() ? 0.6 : 1,
-            transition: 'var(--transition-smooth)',
-            boxShadow: '0 4px 12px rgba(110, 68, 255, 0.3)',
-          }}
+          className="cta-gradient w-full md:w-auto whitespace-nowrap px-xl py-md rounded-lg text-white font-label-md text-label-md shadow-lg flex items-center justify-center gap-sm disabled:opacity-60 cursor-pointer"
         >
-          {loading ? 'Analyzing...' : 'Run Audit'}
+          {loading ? (
+            <>
+              <span className="material-symbols-outlined animate-spin" style={{ fontSize: '18px' }}>progress_activity</span>
+              Analyzing...
+            </>
+          ) : (
+            <>
+              Run Audit
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+            </>
+          )}
         </button>
       </div>
     </form>
