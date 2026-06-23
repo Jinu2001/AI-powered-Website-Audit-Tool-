@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
     const rawMetrics = await scrapeUrl(url);
 
     // Step 2: Classify Page
-    const pageType = classifyPage(rawMetrics);
+    const pageType = classifyPage(rawMetrics, url);
 
     // Step 3: Run Deterministic Rules & Benchmarks
     const { flags, benchmarkDeltas } = runRules(rawMetrics, pageType);
@@ -44,6 +44,15 @@ router.post('/', async (req, res) => {
 
     // Step 5: Query AI
     const aiResponse = await getAiInsights(systemPrompt, userPrompt);
+
+    // Enforce unique sequential priorities for recommendations
+    if (aiResponse.recommendations && Array.isArray(aiResponse.recommendations)) {
+      aiResponse.recommendations.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+      aiResponse.recommendations = aiResponse.recommendations.map((rec, index) => {
+        rec.priority = index + 1;
+        return rec;
+      });
+    }
 
     // Step 6: Log prompts and raw output to backend/logs/
     const logsDir = path.join(__dirname, '..', 'logs');
