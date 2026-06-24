@@ -1,60 +1,41 @@
-import { chromium } from 'playwright';
+import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 /**
- * Scrapes a URL and extracts raw HTML metrics using Playwright.
+ * Scrapes a URL and extracts raw HTML metrics.
  * @param {string} urlString 
  * @returns {Promise<Object>}
  */
 export async function scrapeUrl(urlString) {
   try {
-    // Add protocol if missing, default to https
+    // Add protocol if missing
     let targetUrl = urlString;
-    let autoAddedProtocol = false;
-    
     if (!/^https?:\/\//i.test(targetUrl)) {
       targetUrl = 'https://' + targetUrl;
-      autoAddedProtocol = true;
     }
 
-    let html;
-    let finalUrl = targetUrl;
-    let domain;
+    const parsedUrl = new URL(targetUrl);
+    const domain = parsedUrl.hostname;
 
-    const browser = await chromium.launch({ headless: true });
-    try {
-      const page = await browser.newPage();
-      
-      try {
-        // Navigate and wait for DOM
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-        // Wait a bit for JS frameworks (like React/Vite) to populate the root div
-        await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-        finalUrl = page.url();
-      } catch (error) {
-        // If we auto-added https:// and it failed, fallback to http://
-        if (autoAddedProtocol && (error.message.includes('ERR_NAME_NOT_RESOLVED') || error.message.includes('ERR_CONNECTION_REFUSED') || error.message.includes('ERR_CERT_'))) {
-          console.warn(`HTTPS failed for ${urlString}, falling back to HTTP...`);
-          targetUrl = 'http://' + urlString;
-          await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-          await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-          finalUrl = page.url();
-        } else {
-          throw error;
-        }
-      }
+    // Fetch HTML with a standard User-Agent to avoid blocker response
+    const response = await axios.get(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5'
+      },
+      timeout: 10000
+    });
 
-      const parsedUrl = new URL(finalUrl);
-      domain = parsedUrl.hostname;
-
-      html = await page.content();
-    } finally {
-      await browser.close();
-    }
-
+    const html = response.data;
     const $ = cheerio.load(html);
 
-    // (Text extraction moved to the end of the script to avoid stripping DOM elements before counting links)
+    // 1. Word count (clean text of body excluding scripts, styles, etc.)
+    $('script, style, svg, noscript, iframe, nav, footer, header').remove();
+    const bodyText = $('body').text() || '';
+    const cleanText = bodyText.replace(/\s+/g, ' ').trim();
+    const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+    const wordCount = words.length;
 
     // 2. Heading counts
     const h1Count = $('h1').length;
@@ -134,22 +115,8 @@ export async function scrapeUrl(urlString) {
     const metaTitle = $('title').first().text() || $('meta[property="og:title"]').attr('content') || '';
     const metaDescription = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || '';
 
-    // Now clean up DOM for text extraction
-    $('script, style, svg, noscript, iframe, video').remove();
-
-    // 1. Word count (clean text of body excluding scripts/styles, but keeping nav/footer for standard word count)
-    const bodyText = $('body').text() || '';
-    const cleanBodyText = bodyText.replace(/\s+/g, ' ').trim();
-    const words = cleanBodyText.split(/\s+/).filter(w => w.length > 0);
-    const wordCount = words.length;
-
-    // 7. Content sample (extract from main if possible, and exclude nav/footer/carousels for cleaner signal)
-    $('nav, footer, header').remove();
-    $('.carousel, [class*="carousel"], [class*="slider"]').remove();
-    
-    const mainText = $('main').length > 0 ? $('main').text() : $('body').text() || '';
-    const cleanMainText = mainText.replace(/\s+/g, ' ').trim();
-    const contentSample = cleanMainText.substring(0, 800);
+    // 7. Content sample (first 800 characters of body text)
+    const contentSample = cleanText.substring(0, 800);
 
     // 8. SPA detection flag (if word count < 50)
     const isSpa = wordCount < 50;
@@ -173,9 +140,6 @@ export async function scrapeUrl(urlString) {
 
   } catch (error) {
     console.error('Error during scraping:', error.message);
-    if (error.message.includes('ERR_NAME_NOT_RESOLVED') || error.message.includes('ERR_CONNECTION_REFUSED')) {
-      throw new Error('Could not reach the website. Please check if the URL is spelled correctly and the site is online.');
-    }
     throw new Error(`Failed to scrape the URL: ${error.message}`);
   }
 }

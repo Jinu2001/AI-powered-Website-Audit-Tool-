@@ -3,19 +3,8 @@
  * @param {Object} metrics 
  * @returns {string} One of 'landing_page', 'blog_post', 'homepage'
  */
-export function classifyPage(metrics, urlString) {
+export function classifyPage(metrics) {
   const { wordCount, h2Count, ctaCount, internalLinks } = metrics;
-
-  try {
-    if (urlString) {
-      const parsedUrl = new URL(urlString);
-      if (parsedUrl.pathname === '/' || parsedUrl.pathname === '') {
-        return 'homepage';
-      }
-    }
-  } catch (e) {
-    // Ignore URL parsing errors and fallback to heuristics
-  }
 
   // Rule 1: blog_post
   if (wordCount > 800 && h2Count > 3) {

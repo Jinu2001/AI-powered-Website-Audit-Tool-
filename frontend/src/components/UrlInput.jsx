@@ -15,9 +15,9 @@ export default function UrlInput({ onSubmit, loading }) {
         <div className="flex items-center w-full px-md py-sm">
           <span className="material-symbols-outlined text-outline mr-sm">language</span>
           <input
-            type="text"
+            type="url"
             className="w-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline-variant font-body-md text-body-md"
-            placeholder="eight25media.com"
+            placeholder="https://yoursite.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             disabled={loading}
