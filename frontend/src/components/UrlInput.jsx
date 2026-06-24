@@ -3,10 +3,22 @@ import React, { useState } from 'react';
 export default function UrlInput({ onSubmit, loading }) {
   const [url, setUrl] = useState('');
 
+  const completeUrl = (urlStr) => {
+    let finalUrl = urlStr.trim();
+    if (!finalUrl) return finalUrl;
+    
+    // Add https:// if no protocol is present
+    if (!/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = 'https://' + finalUrl;
+    }
+    
+    return finalUrl;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!url.trim()) return;
-    onSubmit(url.trim());
+    onSubmit(completeUrl(url));
   };
 
   return (
@@ -15,9 +27,9 @@ export default function UrlInput({ onSubmit, loading }) {
         <div className="flex items-center w-full px-md py-sm">
           <span className="material-symbols-outlined text-outline mr-sm">language</span>
           <input
-            type="url"
+            type="text"
             className="w-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline-variant font-body-md text-body-md"
-            placeholder="https://yoursite.com"
+            placeholder="eight25media.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             disabled={loading}
